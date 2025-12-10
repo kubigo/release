@@ -1,0 +1,32 @@
+name: 'Kubigo Approve Action'
+description: 'Approve a pending release in Kubigo'
+author: 'Kubigo'
+branding:
+  icon: 'check-circle'
+  color: 'green'
+
+inputs:
+  api-url:
+    description: 'Kubigo API URL (e.g., https://api.kubigo.com)'
+    required: true
+  api-key:
+    description: 'Kubigo API Key (store in secrets)'
+    required: true
+  release-id:
+    description: 'Release ID to approve'
+    required: true
+  comment:
+    description: 'Optional approval comment'
+    required: false
+
+outputs:
+  status:
+    description: 'Release status after approval'
+  approved-at:
+    description: 'Approval timestamp'
+  success:
+    description: 'Whether the approval was successful'
+
+runs:
+  using: 'node20'
+  main: 'index.js'

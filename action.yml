@@ -1,0 +1,49 @@
+name: 'Kubigo Release Action'
+description: 'Automatically create releases in Kubigo after successful builds'
+author: 'Kubigo'
+branding:
+  icon: 'package'
+  color: 'blue'
+
+inputs:
+  api-url:
+    description: 'Kubigo API URL (e.g., https://api.kubigo.com)'
+    required: true
+  api-key:
+    description: 'Kubigo API Key (store in secrets)'
+    required: true
+  image-tag:
+    description: 'Docker image tag to deploy'
+    required: true
+  service-id:
+    description: 'Optional: Specific service ID (overrides repo matching)'
+    required: false
+  triggered-by:
+    description: 'Who/what triggered this release'
+    required: false
+    default: 'github-actions'
+  repository-url:
+    description: 'Repository URL (auto-detected if not provided)'
+    required: false
+  branch:
+    description: 'Git branch (auto-detected if not provided)'
+    required: false
+  commit-sha:
+    description: 'Git commit SHA (auto-detected if not provided)'
+    required: false
+
+outputs:
+  releases-created:
+    description: 'Number of releases created'
+  releases-auto-deployed:
+    description: 'Number of releases auto-deployed'
+  service-id:
+    description: 'ID of the matched service'
+  service-name:
+    description: 'Name of the matched service'
+  success:
+    description: 'Whether the operation was successful'
+
+runs:
+  using: 'node20'
+  main: 'dist/index.js'

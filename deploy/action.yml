@@ -1,0 +1,29 @@
+name: 'Kubigo Deploy Action'
+description: 'Deploy a specific release to a target environment in Kubigo'
+author: 'Kubigo'
+branding:
+  icon: 'upload-cloud'
+  color: 'green'
+
+inputs:
+  api-url:
+    description: 'Kubigo API URL (e.g., https://api.kubigo.com)'
+    required: true
+  api-key:
+    description: 'Kubigo API Key (store in secrets)'
+    required: true
+  release-id:
+    description: 'Release ID to deploy'
+    required: true
+
+outputs:
+  status:
+    description: 'Deployment status'
+  deployed-at:
+    description: 'Deployment timestamp'
+  success:
+    description: 'Whether the deployment was successful'
+
+runs:
+  using: 'node20'
+  main: 'index.js'

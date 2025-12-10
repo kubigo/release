@@ -1,0 +1,28 @@
+name: Emergency Rollback
+
+on:
+  workflow_dispatch:
+    inputs:
+      target-id:
+        description: 'Target ID to rollback'
+        required: true
+      reason:
+        description: 'Reason for rollback'
+        required: true
+
+jobs:
+  rollback:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Rollback Release
+        uses: kubigo/kubigo-release-action/rollback@v1
+        with:
+          api-url: ${{ secrets.KUBIGO_API_URL }}
+          api-key: ${{ secrets.KUBIGO_API_KEY }}
+          target-id: ${{ github.event.inputs.target-id }}
+          reason: ${{ github.event.inputs.reason }}
+      
+      - name: Notify Team
+        run: |
+          echo "🚨 Rollback completed for target ${{ github.event.inputs.target-id }}"
+          echo "Reason: ${{ github.event.inputs.reason }}"

@@ -1,0 +1,32 @@
+name: 'Kubigo Rollback Action'
+description: 'Rollback to a previous release in Kubigo'
+author: 'Kubigo'
+branding:
+  icon: 'rotate-ccw'
+  color: 'red'
+
+inputs:
+  api-url:
+    description: 'Kubigo API URL (e.g., https://api.kubigo.com)'
+    required: true
+  api-key:
+    description: 'Kubigo API Key (store in secrets)'
+    required: true
+  target-id:
+    description: 'Target ID to rollback'
+    required: true
+  reason:
+    description: 'Reason for rollback'
+    required: false
+
+outputs:
+  release-id:
+    description: 'ID of the new rollback release'
+  status:
+    description: 'Rollback status'
+  success:
+    description: 'Whether the rollback was successful'
+
+runs:
+  using: 'node20'
+  main: 'index.js'

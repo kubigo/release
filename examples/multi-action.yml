@@ -1,0 +1,50 @@
+name: Multi-Action Deploy
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    outputs:
+      release-id: ${{ steps.create-release.outputs.release-id }}
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Build Docker Image
+        run: |
+          docker build -t myrepo/myapp:${{ github.sha }} .
+          docker push myrepo/myapp:${{ github.sha }}
+      
+      - name: Create Release
+        id: create-release
+        uses: kubigo/kubigo-release-action@v1
+        with:
+          api-url: ${{ secrets.KUBIGO_API_URL }}
+          api-key: ${{ secrets.KUBIGO_API_KEY }}
+          image-tag: myrepo/myapp:${{ github.sha }}
+
+  approve-staging:
+    needs: build-and-release
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - name: Approve Staging Release
+        uses: kubigo/kubigo-release-action/approve@v1
+        with:
+          api-url: ${{ secrets.KUBIGO_API_URL }}
+          api-key: ${{ secrets.KUBIGO_API_KEY }}
+          release-id: ${{ needs.build-and-release.outputs.release-id }}
+          comment: 'Approved by GitHub Actions'
+
+  deploy-staging:
+    needs: approve-staging
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to Staging
+        uses: kubigo/kubigo-release-action/deploy@v1
+        with:
+          api-url: ${{ secrets.KUBIGO_API_URL }}
+          api-key: ${{ secrets.KUBIGO_API_KEY }}
+          release-id: ${{ needs.build-and-release.outputs.release-id }}

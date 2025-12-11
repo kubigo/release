@@ -6,10 +6,10 @@ async function run() {
   try {
     // Get inputs
     const apiKey = core.getInput('api-key', { required: true });
+    const service = core.getInput('service', { required: true });
     const imagesInput = core.getInput('images', { required: true });
     const kubigoUrl = core.getInput('kubigo-url') || 'https://api.kubigo.com';
     const target = core.getInput('target');
-    const serviceId = core.getInput('service-id');
     const triggeredBy = core.getInput('triggered-by') || 'github-actions';
     
     // Parse images - supports both comma-separated and newline-separated
@@ -29,13 +29,15 @@ async function run() {
       (github.context.ref.startsWith('refs/heads/') ? github.context.ref.replace('refs/heads/', '') : github.context.ref);
     const commitSha = core.getInput('commit-sha') || github.context.sha;
 
-    // Build webhook payload
+    // Build webhook payload (platform-agnostic design)
     const payload = {
-      repositoryUrl,
-      branch,
-      commitSha,
-      imageTags: imageTags,
-      triggeredBy,
+      service: service,           // REQUIRED: Service name or ID
+      imageTags: imageTags,       // REQUIRED: Images to deploy
+      target: target,             // OPTIONAL: Specific target environment
+      commitSha: commitSha,       // OPTIONAL: For audit/tracking
+      repositoryUrl: repositoryUrl, // OPTIONAL: For audit/tracking
+      branch: branch,             // OPTIONAL: For audit/tracking
+      triggeredBy: triggeredBy,   // OPTIONAL: Who triggered
       metadata: {
         buildNumber: github.context.runNumber.toString(),
         buildUrl: `${github.context.serverUrl}/${github.context.repo.owner}/${github.context.repo.repo}/actions/runs/${github.context.runId}`,
@@ -48,21 +50,16 @@ async function run() {
       }
     };
 
-    if (serviceId) {
-      payload.serviceId = serviceId;
-    }
-
-    if (target) {
-      payload.target = target;
-    }
-
-    core.info(`🚀 Creating releases for ${repositoryUrl}/${branch}`);
+    core.info(`🚀 Creating release for service: ${service}`);
     core.info(`📦 Images (${imageTags.length}):`);
     imageTags.forEach(tag => core.info(`   - ${tag}`));
     if (target) {
       core.info(`🎯 Target: ${target}`);
+    } else {
+      core.info(`🎯 Target: All configured targets`);
     }
     core.info(`📝 Commit: ${commitSha.substring(0, 7)}`);
+    core.info(`🌐 Platform: GitHub Actions`);
     core.debug(`Full payload: ${JSON.stringify(payload, null, 2)}`);
 
     // Call webhook

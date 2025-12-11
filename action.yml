@@ -9,31 +9,31 @@ inputs:
   api-key:
     description: 'Kubigo API Key (store in secrets)'
     required: true
+  service:
+    description: 'Service name or ID to deploy (e.g., "api-service", "frontend-app")'
+    required: true
   images:
     description: 'Docker images to deploy (comma-separated or newline-separated for multiple containers)'
     required: true
+  target:
+    description: 'Target environment to deploy to (e.g., development, staging, production). If not specified, deploys to all targets.'
+    required: false
   kubigo-url:
     description: 'Kubigo API URL (optional, defaults to https://api.kubigo.com)'
     required: false
     default: 'https://api.kubigo.com'
-  target:
-    description: 'Target environment to deploy to (e.g., development, staging, production)'
-    required: false
-  service-id:
-    description: 'Optional: Specific service ID (overrides repo matching)'
-    required: false
   triggered-by:
-    description: 'Who/what triggered this release'
+    description: 'Who/what triggered this release (optional, defaults to github-actions)'
     required: false
     default: 'github-actions'
   repository-url:
-    description: 'Repository URL (auto-detected if not provided)'
+    description: 'Repository URL (optional, auto-detected, for audit/tracking only)'
     required: false
   branch:
-    description: 'Git branch (auto-detected if not provided)'
+    description: 'Git branch (optional, auto-detected, for audit/tracking only)'
     required: false
   commit-sha:
-    description: 'Git commit SHA (auto-detected if not provided)'
+    description: 'Git commit SHA (optional, auto-detected, for audit/tracking only)'
     required: false
 
 outputs:

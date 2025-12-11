@@ -48,24 +48,30 @@ jobs:
         uses: kubigo/release@v1
         with:
           api-key: ${{ secrets.KUBIGO_API_KEY }}
+          service: api-service
           images: myrepo/myapp:${{ github.sha }}
 ```
 
-**That's it!** Just `api-key` and `images` - the URL defaults to `https://api.kubigo.com`.
+**That's it!** Just 3 inputs:
+1. `api-key` - Your Kubigo API key
+2. `service` - Service name (e.g., "api-service", "frontend-app")
+3. `images` - Docker images to deploy
+
+**Platform-agnostic design** - works with GitHub, GitLab, Azure DevOps, Jenkins, and any CI/CD platform!
 
 ## 📖 Inputs
 
 | Input | Required | Default | Description |
 |-------|----------|---------|-------------|
 | `api-key` | ✅ Yes | - | Kubigo API Key (store in GitHub Secrets) |
+| `service` | ✅ Yes | - | Service name or ID (e.g., `api-service`, `frontend-app`) |
 | `images` | ✅ Yes | - | Docker images (comma or newline-separated) |
 | `target` | ❌ No | All targets | Specific target environment (e.g., `development`, `staging`, `production`) |
 | `kubigo-url` | ❌ No | `https://api.kubigo.com` | Kubigo API URL (only needed for self-hosted) |
-| `service-id` | ❌ No | Auto-matched | Specific service ID (overrides repository matching) |
 | `triggered-by` | ❌ No | `github-actions` | Who/what triggered this release |
-| `repository-url` | ❌ No | Auto-detected | Repository URL |
-| `branch` | ❌ No | Auto-detected | Git branch name |
-| `commit-sha` | ❌ No | Auto-detected | Git commit SHA |
+| `repository-url` | ❌ No | Auto-detected | Repository URL (for audit/tracking only) |
+| `branch` | ❌ No | Auto-detected | Git branch name (for audit/tracking only) |
+| `commit-sha` | ❌ No | Auto-detected | Git commit SHA (for audit/tracking only) |
 
 ## 📤 Outputs
 
@@ -86,8 +92,8 @@ jobs:
   id: kubigo
   uses: kubigo/release@v1
   with:
-    kubigo-url: ${{ secrets.KUBIGO_URL }}
     api-key: ${{ secrets.KUBIGO_API_KEY }}
+    service: api-service
     images: myrepo/myapp:${{ github.sha }}
 
 - name: Check Results
@@ -114,8 +120,8 @@ jobs:
 - name: Create Release
   uses: kubigo/release@v1
   with:
-    kubigo-url: ${{ secrets.KUBIGO_URL }}
     api-key: ${{ secrets.KUBIGO_API_KEY }}
+    service: microservices-app
     # Multiple images using YAML multiline (cleaner!)
     images: |
       myrepo/frontend:${{ github.sha }}
@@ -128,8 +134,8 @@ jobs:
 - name: Create Release
   uses: kubigo/release@v1
   with:
-    kubigo-url: ${{ secrets.KUBIGO_URL }}
     api-key: ${{ secrets.KUBIGO_API_KEY }}
+    service: microservices-app
     images: myrepo/frontend:${{ github.sha }}, myrepo/backend:${{ github.sha }}, myrepo/worker:${{ github.sha }}
 ```
 
@@ -139,10 +145,9 @@ jobs:
 - name: Create Release in Kubigo
   uses: kubigo/release@v1
   with:
-    kubigo-url: ${{ secrets.KUBIGO_URL }}
     api-key: ${{ secrets.KUBIGO_API_KEY }}
+    service: '123e4567-e89b-12d3-a456-426614174000'  # Can use GUID directly
     images: myrepo/myapp:${{ github.sha }}
-    service-id: '123e4567-e89b-12d3-a456-426614174000'
 ```
 
 ### Multi-Environment Deployment
@@ -156,8 +161,8 @@ jobs:
 - name: Create Releases
   uses: kubigo/release@v1
   with:
-    kubigo-url: ${{ secrets.KUBIGO_URL }}
     api-key: ${{ secrets.KUBIGO_API_KEY }}
+    service: api-service
     images: myrepo/myapp:${{ github.sha }}
   # This will create releases for ALL configured targets:
   # - Development (auto-deploys)
@@ -171,8 +176,8 @@ jobs:
 - name: Create Release
   uses: kubigo/release@v1
   with:
-    kubigo-url: ${{ secrets.KUBIGO_URL }}
     api-key: ${{ secrets.KUBIGO_API_KEY }}
+    service: api-service
     images: myrepo/myapp:${{ github.sha }}
     triggered-by: ${{ github.actor }}
 ```
@@ -184,6 +189,7 @@ jobs:
   uses: kubigo/release@v1
   with:
     api-key: ${{ secrets.KUBIGO_API_KEY }}
+    service: api-service
     images: myrepo/myapp:${{ github.sha }}
     target: staging  # Only creates release for staging environment
 ```
@@ -196,6 +202,7 @@ jobs:
   uses: kubigo/release@v1
   with:
     api-key: ${{ secrets.KUBIGO_API_KEY }}
+    service: api-service
     images: myrepo/myapp:${{ github.sha }}
     target: production
 ```
@@ -224,12 +231,16 @@ jobs:
 ### 3. Configure Service in Kubigo
 
 1. Create a **Service** in Kubigo
-2. Set the **Repository URL** to match your GitHub repo (e.g., `https://github.com/user/repo`)
-3. Set the **Branch** (e.g., `main`)
+2. Give it a unique **Name** (e.g., `api-service`, `frontend-app`)
+   - This name is what you'll use in the `service` input
+   - Must be unique per company
+3. Optionally set **Repository URL** and **Branch** (for reference only)
 4. Add **Targets** (environments):
    - Development (no approval required)
    - Staging (approval required)
    - Production (approval required)
+
+**Important**: The service name is the primary identifier - no coupling to git repo/branch!
 
 ### 4. Add Workflow
 

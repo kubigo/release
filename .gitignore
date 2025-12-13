@@ -1,5 +1,5 @@
 node_modules/
-dist/
+# dist/ - Must be committed for GitHub Actions
 *.log
 .env
 .DS_Store

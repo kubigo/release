@@ -19,9 +19,9 @@ inputs:
     description: 'Target environment to deploy to (e.g., development, staging, production). If not specified, deploys to all targets.'
     required: false
   kubigo-url:
-    description: 'Kubigo API URL (optional, defaults to https://api.kubigo.com)'
+    description: 'Kubigo API URL (optional, defaults to https://app.kubigo.com)'
     required: false
-    default: 'https://api.kubigo.com'
+    default: 'https://app.kubigo.com'
   triggered-by:
     description: 'Who/what triggered this release (optional, defaults to github-actions)'
     required: false

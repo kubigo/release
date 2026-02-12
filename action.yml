@@ -1,5 +1,5 @@
 name: 'Kubigo Release Action'
-description: 'Automatically create releases in Kubigo after successful builds'
+description: 'Deploy container images to Kubigo environments'
 author: 'Kubigo'
 branding:
   icon: 'package'
@@ -9,14 +9,11 @@ inputs:
   api-key:
     description: 'Kubigo API Key (store in secrets)'
     required: true
-  service:
-    description: 'Service name or ID to deploy (e.g., "api-service", "frontend-app")'
+  target-id:
+    description: 'Target ID to deploy to (format: project/service/target, e.g., "my-team/api-service/production")'
     required: true
   images:
     description: 'Docker images to deploy (comma-separated or newline-separated for multiple containers)'
-    required: true
-  target:
-    description: 'Target environment to deploy to (e.g., development, staging, production)'
     required: true
   kubigo-url:
     description: 'Kubigo API URL (optional, defaults to https://app.kubigo.cloud)'
@@ -37,14 +34,14 @@ inputs:
     required: false
 
 outputs:
-  releases-created:
-    description: 'Number of releases created'
-  releases-auto-deployed:
-    description: 'Number of releases auto-deployed'
+  release-id:
+    description: 'ID of the created release'
+  release-status:
+    description: 'Status of the release (pending, deployed, failed)'
+  target-id:
+    description: 'ID of the deployment target'
   service-id:
-    description: 'ID of the matched service'
-  service-name:
-    description: 'Name of the matched service'
+    description: 'ID of the service'
   success:
     description: 'Whether the operation was successful'
 

@@ -3,18 +3,15 @@
 [![GitHub Marketplace](https://img.shields.io/badge/Marketplace-Kubigo%20Release-blue.svg?colorA=24292e&colorB=0366d6&style=flat&longCache=true&logo=github)](https://github.com/marketplace/actions/kubigo-release)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Automatically create releases in Kubigo after successful builds. This action integrates seamlessly with your CI/CD pipeline to deploy to multiple environments with approval workflows. Supports multi-container deployments.
+Deploy container images to Kubigo environments with a simple, 3-parameter configuration.
 
 ## ✨ Features
 
-- ✅ **Auto-detects** repository, branch, and commit from GitHub context
-- 🚀 **Auto-deploys** to environments without approval requirements
-- 📊 **Rich outputs** for downstream workflow steps
-- 🔒 **Secure** API key authentication
-- 📝 **Detailed logging** with release status
-- 🎯 **Multi-environment** support (dev, staging, production)
-- 🐳 **Multi-container** support for microservices
-- ⚡ **Fast** - typically completes in < 2 seconds
+- **Ultra-simple**: Just 3 required inputs
+- **Atomic targeting**: Single `target-id` identifies exactly where to deploy
+- **Multi-container**: Deploy multiple images in one action
+- **Git context**: Auto-captures commit, branch, and repository metadata
+- **Fast**: Typically completes in < 2 seconds
 
 ## 🚀 Quick Start
 
@@ -22,7 +19,7 @@ Automatically create releases in Kubigo after successful builds. This action int
 
 1. **Kubigo Account** - Sign up at [kubigo.com](https://kubigo.com)
 2. **API Key** - Generate in Kubigo: Settings → Integrations → API Keys
-3. **Service Configured** - Create a service in Kubigo matching your repository
+3. **Target ID** - Create a service with targets in Kubigo, copy the target ID
 
 ### Basic Usage
 
@@ -38,233 +35,150 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
-      - name: Build Docker Image
+
+      - name: Build and Push Docker Image
         run: |
           docker build -t myrepo/myapp:${{ github.sha }} .
           docker push myrepo/myapp:${{ github.sha }}
-      
-      - name: Create Release in Kubigo
+
+      - name: Deploy to Kubigo
         uses: kubigo/release@v1
         with:
           api-key: ${{ secrets.KUBIGO_API_KEY }}
-          service: api-service
+          target-id: my-team/api-service/production
           images: myrepo/myapp:${{ github.sha }}
-          target: development
 ```
 
-**That's it!** Just 4 inputs:
+**That's it!** Just 3 inputs:
 1. `api-key` - Your Kubigo API key
-2. `service` - Service name (e.g., "api-service", "frontend-app")
+2. `target-id` - Where to deploy (format: `project/service/target`)
 3. `images` - Docker images to deploy
-4. `target` - Target environment (e.g., "development", "staging", "production")
-
-**Platform-agnostic design** - works with GitHub, GitLab, Azure DevOps, Jenkins, and any CI/CD platform!
 
 ## 📖 Inputs
 
 | Input | Required | Default | Description |
 |-------|----------|---------|-------------|
 | `api-key` | ✅ Yes | - | Kubigo API Key (store in GitHub Secrets) |
-| `service` | ✅ Yes | - | Service name or ID (e.g., `api-service`, `frontend-app`) |
+| `target-id` | ✅ Yes | - | Target ID (UUID or database ID, e.g., `433453`) |
 | `images` | ✅ Yes | - | Docker images (comma or newline-separated) |
-| `target` | ✅ Yes | - | Target environment (e.g., `development`, `staging`, `production`) |
-| `kubigo-url` | ❌ No | `https://api.kubigo.com` | Kubigo API URL (only needed for self-hosted) |
+| `kubigo-url` | ❌ No | `https://app.kubigo.cloud` | Kubigo API URL (self-hosted only) |
 | `triggered-by` | ❌ No | `github-actions` | Who/what triggered this release |
-| `repository-url` | ❌ No | Auto-detected | Repository URL (for audit/tracking only) |
-| `branch` | ❌ No | Auto-detected | Git branch name (for audit/tracking only) |
-| `commit-sha` | ❌ No | Auto-detected | Git commit SHA (for audit/tracking only) |
+| `repository-url` | ❌ No | Auto-detected | Repository URL (audit/tracking) |
+| `branch` | ❌ No | Auto-detected | Git branch (audit/tracking) |
+| `commit-sha` | ❌ No | Auto-detected | Git commit SHA (audit/tracking) |
+
+### Target ID Format
+
+The `target-id` is the unique database identifier for your deployment target.
+
+Examples:
+- `550e8400-e29b-41d4-a716-446655440000` (UUID)
+- `433453` (numeric ID)
+
+Get your target ID from the Kubigo dashboard: Service → Target → Copy ID
 
 ## 📤 Outputs
 
-| Output | Description | Example |
-|--------|-------------|---------|
-| `releases-created` | Number of releases created | `3` |
-| `releases-auto-deployed` | Number of releases auto-deployed | `1` |
-| `service-id` | ID of the matched service | `123e4567-e89b-12d3-...` |
-| `service-name` | Name of the matched service | `API Service` |
-| `success` | Whether the operation was successful | `true` |
+| Output | Description |
+|--------|-------------|
+| `release-id` | ID of the created release |
+| `release-status` | Status (pending, deployed, failed) |
+| `target-id` | Resolved target ID |
+| `service-id` | Resolved service ID |
+| `success` | Whether the operation succeeded |
 
-## 🎯 Advanced Examples
+## 📝 Examples
 
 ### With Outputs
 
 ```yaml
-- name: Create Release in Kubigo
-  id: kubigo
+- name: Deploy to Kubigo
+  id: deploy
   uses: kubigo/release@v1
   with:
     api-key: ${{ secrets.KUBIGO_API_KEY }}
-    service: api-service
+    target-id: my-team/api-service/production
     images: myrepo/myapp:${{ github.sha }}
-    target: development
 
-- name: Check Results
+- name: Check Deployment
   run: |
-    echo "✅ Releases created: ${{ steps.kubigo.outputs.releases-created }}"
-    echo "🚀 Auto-deployed: ${{ steps.kubigo.outputs.releases-auto-deployed }}"
-    echo "📦 Service: ${{ steps.kubigo.outputs.service-name }}"
+    echo "✅ Release ID: ${{ steps.deploy.outputs.release-id }}"
+    echo "📊 Status: ${{ steps.deploy.outputs.release-status }}"
 ```
 
 ### Multi-Container Deployment
 
 ```yaml
-- name: Build and Push Multiple Images
-  run: |
-    docker build -t myrepo/frontend:${{ github.sha }} ./frontend
-    docker push myrepo/frontend:${{ github.sha }}
-    
-    docker build -t myrepo/backend:${{ github.sha }} ./backend
-    docker push myrepo/backend:${{ github.sha }}
-    
-    docker build -t myrepo/worker:${{ github.sha }} ./worker
-    docker push myrepo/worker:${{ github.sha }}
-
-- name: Create Release
+- name: Deploy Multiple Images
   uses: kubigo/release@v1
   with:
     api-key: ${{ secrets.KUBIGO_API_KEY }}
-    service: microservices-app
-    target: development
-    # Multiple images using YAML multiline (cleaner!)
+    target-id: my-team/microservices/production
     images: |
       myrepo/frontend:${{ github.sha }}
       myrepo/backend:${{ github.sha }}
       myrepo/worker:${{ github.sha }}
 ```
 
-**Alternative (comma-separated):**
-```yaml
-- name: Create Release
-  uses: kubigo/release@v1
-  with:
-    api-key: ${{ secrets.KUBIGO_API_KEY }}
-    service: microservices-app
-    target: development
-    images: myrepo/frontend:${{ github.sha }}, myrepo/backend:${{ github.sha }}, myrepo/worker:${{ github.sha }}
-```
-
-### With Specific Service ID
+### Deploy to Staging
 
 ```yaml
-- name: Create Release in Kubigo
-  uses: kubigo/release@v1
-  with:
-    api-key: ${{ secrets.KUBIGO_API_KEY }}
-    service: '123e4567-e89b-12d3-a456-426614174000'  # Can use GUID directly
-    images: myrepo/myapp:${{ github.sha }}
-    target: production
-```
-
-### Multi-Environment Deployment
-
-```yaml
-- name: Build and Push
-  run: |
-    docker build -t myrepo/myapp:${{ github.sha }} .
-    docker push myrepo/myapp:${{ github.sha }}
-
-- name: Deploy to Development
-  uses: kubigo/release@v1
-  with:
-    api-key: ${{ secrets.KUBIGO_API_KEY }}
-    service: api-service
-    images: myrepo/myapp:${{ github.sha }}
-    target: development
-
 - name: Deploy to Staging
   uses: kubigo/release@v1
   with:
     api-key: ${{ secrets.KUBIGO_API_KEY }}
-    service: api-service
+    target-id: my-team/api-service/staging
     images: myrepo/myapp:${{ github.sha }}
-    target: staging
+```
 
+### Conditional Production Deployment
+
+```yaml
 - name: Deploy to Production
-  uses: kubigo/release@v1
-  with:
-    api-key: ${{ secrets.KUBIGO_API_KEY }}
-    service: api-service
-    images: myrepo/myapp:${{ github.sha }}
-    target: production
-```
-
-### With Custom Metadata
-
-```yaml
-- name: Create Release
-  uses: kubigo/release@v1
-  with:
-    api-key: ${{ secrets.KUBIGO_API_KEY }}
-    service: api-service
-    images: myrepo/myapp:${{ github.sha }}
-    target: development
-    triggered-by: ${{ github.actor }}
-```
-
-### Deploy to Specific Target
-
-```yaml
-- name: Deploy to Staging Only
-  uses: kubigo/release@v1
-  with:
-    api-key: ${{ secrets.KUBIGO_API_KEY }}
-    service: api-service
-    images: myrepo/myapp:${{ github.sha }}
-    target: staging  # Only creates release for staging environment
-```
-
-### Conditional Deployment
-
-```yaml
-- name: Create Release (Production Only)
   if: github.ref == 'refs/heads/main'
   uses: kubigo/release@v1
   with:
     api-key: ${{ secrets.KUBIGO_API_KEY }}
-    service: api-service
+    target-id: my-team/api-service/production
     images: myrepo/myapp:${{ github.sha }}
-    target: production
+```
+
+### Matrix Deployment
+
+```yaml
+strategy:
+  matrix:
+    target: [staging, production]
+
+steps:
+  - name: Deploy to ${{ matrix.target }}
+    uses: kubigo/release@v1
+    with:
+      api-key: ${{ secrets.KUBIGO_API_KEY }}
+      target-id: my-team/api-service/${{ matrix.target }}
+      images: myrepo/myapp:${{ github.sha }}
 ```
 
 ## 🔧 Setup Guide
 
-### 1. Generate API Key
+### 1. Get Your Target ID
 
 1. Log in to Kubigo
-2. Navigate to **Settings → Integrations → API Keys**
-3. Click **"Generate New API Key"**
-4. Give it a descriptive name (e.g., "GitHub Actions - MyApp")
-5. **Copy the key immediately** - it won't be shown again!
+2. Navigate to your **Service**
+3. Select the **Target** environment
+4. Copy the **Target ID** shown (format: `project/service/target`)
 
-### 2. Add Secret to GitHub
+### 2. Add API Key to GitHub
 
-1. Go to your repository on GitHub
-2. Navigate to **Settings → Secrets and variables → Actions**
-3. Click **"New repository secret"**
-4. Add secret:
+1. Go to your repository → **Settings → Secrets and variables → Actions**
+2. Click **"New repository secret"**
+3. Add:
    - **Name**: `KUBIGO_API_KEY`
-   - **Value**: The API key you generated
+   - **Value**: Your API key from Kubigo
 
-**Note**: No need to add `KUBIGO_URL` - it defaults to `https://api.kubigo.com`!
+### 3. Create Workflow
 
-### 3. Configure Service in Kubigo
-
-1. Create a **Service** in Kubigo
-2. Give it a unique **Name** (e.g., `api-service`, `frontend-app`)
-   - This name is what you'll use in the `service` input
-   - Must be unique per company
-3. Optionally set **Repository URL** and **Branch** (for reference only)
-4. Add **Targets** (environments):
-   - Development (no approval required)
-   - Staging (approval required)
-   - Production (approval required)
-
-**Important**: The service name is the primary identifier - no coupling to git repo/branch!
-
-### 4. Add Workflow
-
-Create `.github/workflows/deploy.yml` in your repository with the example above.
+Create `.github/workflows/deploy.yml` using the examples above.
 
 ## 🔍 How It Works
 
@@ -282,70 +196,56 @@ Create `.github/workflows/deploy.yml` in your repository with the example above.
            ▼
 ┌─────────────────────┐
 │  Kubigo Release     │
-│  Action (this)      │
+│  Action             │
+│  - target-id: p/s/t  │
+│  - images: tag      │
 └──────────┬──────────┘
            │
            ▼
 ┌─────────────────────┐
 │  Kubigo API         │
 │  - Validates key    │
-│  - Finds service    │
-│  - Creates releases │
+│  - Resolves target  │
+│  - Creates release  │
 └──────────┬──────────┘
            │
            ▼
-┌─────────────────────────────────┐
-│  Releases Created:              │
-│  ✅ Dev (auto-deployed)         │
-│  ⏸️  Staging (pending approval) │
-│  ⏸️  Prod (pending approval)    │
-└─────────────────────────────────┘
+┌─────────────────────┐
+│  Release Created    │
+│  Status: deployed   │
+└─────────────────────┘
 ```
 
 ## 🐛 Troubleshooting
 
+### "Target not found"
+-1. **Validate target-id** - Verify it's a valid target UUID/database ID
+2. **Lookup target** - Fetch target details from database
+3. **Validate access** - Ensure API key has access to the target's project
+4. **Create release** - Proceed with release creation for the resolved target
+
 ### "Authentication failed"
 - Verify your API key is correct
 - Check the key hasn't been revoked
-- Ensure the key hasn't expired
 
-### "Service not found"
-- Verify repository URL matches exactly
-- Check branch name is correct
-- Ensure service is active in Kubigo
-
-### "Network error"
-- Check `kubigo-url` is correct
-- Verify Kubigo API is accessible
-- Check for firewall/proxy issues
+### "At least one image must be provided"
+- Ensure `images` input is not empty
+- Check image tags are valid
 
 ### Enable Debug Logging
 
-Add this to your workflow for detailed logs:
-
 ```yaml
-- name: Create Release in Kubigo
+- name: Deploy to Kubigo
   uses: kubigo/release@v1
   with:
-    kubigo-url: ${{ secrets.KUBIGO_URL }}
     api-key: ${{ secrets.KUBIGO_API_KEY }}
-    service: api-service
+    target-id: my-team/api-service/production
     images: myrepo/myapp:${{ github.sha }}
-    target: development
   env:
     ACTIONS_STEP_DEBUG: true
 ```
 
-## 🔗 Related Actions
-
-This repository includes multiple actions:
-
-- **Main Action** (`kubigo/release@v1`) - Create releases from CI/CD
-- **Deploy Action** (`kubigo/release/deploy@v1`) - Deploy a specific release
-- **Approve Action** (`kubigo/release/approve@v1`) - Approve pending releases
-- **Rollback Action** (`kubigo/release/rollback@v1`) - Rollback to previous release
-
-## 📝 License
+## 📄 License
 
 MIT License - see [LICENSE](LICENSE) file for details
 
@@ -356,13 +256,8 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 ## 💬 Support
 
 - 📧 Email: support@kubigo.com
-- 💬 Discord: [Join our community](https://discord.gg/kubigo)
 - 📚 Docs: [docs.kubigo.com](https://docs.kubigo.com)
 - 🐛 Issues: [GitHub Issues](https://github.com/kubigo/release/issues)
-
-## ⭐ Show Your Support
-
-If this action helps you, please give it a ⭐ on GitHub!
 
 ---
 

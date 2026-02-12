@@ -9,10 +9,23 @@ async function run() {
     const service = core.getInput('service', { required: true });
     const imagesInput = core.getInput('images', { required: true });
     const kubigoUrl = core.getInput('kubigo-url') || 'https://app.kubigo.cloud';
-    const target = core.getInput('target');
+    const target = core.getInput('target', { required: true });
     const triggeredBy = core.getInput('triggered-by') || 'github-actions';
     
-    // Parse images - supports both comma-separated and newline-separated
+    // Validate required fields
+    if (!apiKey || apiKey.trim() === '') {
+      throw new Error('Input "api-key" is required but was not provided');
+    }
+    if (!service || service.trim() === '') {
+      throw new Error('Input "service" is required but was not provided');
+    }
+    if (!imagesInput || imagesInput.trim() === '') {
+      throw new Error('Input "images" is required but was not provided');
+    }
+    if (!target || target.trim() === '') {
+      throw new Error('Input "target" is required but was not provided');
+    }
+
     const imageTags = imagesInput
       .split(/[\n,]/)  // Split by newline or comma
       .map(tag => tag.trim())
@@ -33,7 +46,7 @@ async function run() {
     const payload = {
       service: service,           // REQUIRED: Service name or ID
       imageTags: imageTags,       // REQUIRED: Images to deploy
-      target: target,             // OPTIONAL: Specific target environment
+      target: target,             // REQUIRED: Target environment
       commitSha: commitSha,       // OPTIONAL: For audit/tracking
       repositoryUrl: repositoryUrl, // OPTIONAL: For audit/tracking
       branch: branch,             // OPTIONAL: For audit/tracking
@@ -53,11 +66,7 @@ async function run() {
     core.info(`🚀 Creating release for service: ${service}`);
     core.info(`📦 Images (${imageTags.length}):`);
     imageTags.forEach(tag => core.info(`   - ${tag}`));
-    if (target) {
-      core.info(`🎯 Target: ${target}`);
-    } else {
-      core.info(`🎯 Target: All configured targets`);
-    }
+    core.info(`🎯 Target: ${target}`);
     core.info(`📝 Commit: ${commitSha.substring(0, 7)}`);
     core.info(`🌐 Platform: GitHub Actions`);
     core.debug(`Full payload: ${JSON.stringify(payload, null, 2)}`);

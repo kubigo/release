@@ -50,12 +50,14 @@ jobs:
           api-key: ${{ secrets.KUBIGO_API_KEY }}
           service: api-service
           images: myrepo/myapp:${{ github.sha }}
+          target: development
 ```
 
-**That's it!** Just 3 inputs:
+**That's it!** Just 4 inputs:
 1. `api-key` - Your Kubigo API key
 2. `service` - Service name (e.g., "api-service", "frontend-app")
 3. `images` - Docker images to deploy
+4. `target` - Target environment (e.g., "development", "staging", "production")
 
 **Platform-agnostic design** - works with GitHub, GitLab, Azure DevOps, Jenkins, and any CI/CD platform!
 
@@ -66,7 +68,7 @@ jobs:
 | `api-key` | ✅ Yes | - | Kubigo API Key (store in GitHub Secrets) |
 | `service` | ✅ Yes | - | Service name or ID (e.g., `api-service`, `frontend-app`) |
 | `images` | ✅ Yes | - | Docker images (comma or newline-separated) |
-| `target` | ❌ No | All targets | Specific target environment (e.g., `development`, `staging`, `production`) |
+| `target` | ✅ Yes | - | Target environment (e.g., `development`, `staging`, `production`) |
 | `kubigo-url` | ❌ No | `https://api.kubigo.com` | Kubigo API URL (only needed for self-hosted) |
 | `triggered-by` | ❌ No | `github-actions` | Who/what triggered this release |
 | `repository-url` | ❌ No | Auto-detected | Repository URL (for audit/tracking only) |
@@ -95,6 +97,7 @@ jobs:
     api-key: ${{ secrets.KUBIGO_API_KEY }}
     service: api-service
     images: myrepo/myapp:${{ github.sha }}
+    target: development
 
 - name: Check Results
   run: |
@@ -122,6 +125,7 @@ jobs:
   with:
     api-key: ${{ secrets.KUBIGO_API_KEY }}
     service: microservices-app
+    target: development
     # Multiple images using YAML multiline (cleaner!)
     images: |
       myrepo/frontend:${{ github.sha }}
@@ -136,6 +140,7 @@ jobs:
   with:
     api-key: ${{ secrets.KUBIGO_API_KEY }}
     service: microservices-app
+    target: development
     images: myrepo/frontend:${{ github.sha }}, myrepo/backend:${{ github.sha }}, myrepo/worker:${{ github.sha }}
 ```
 
@@ -148,6 +153,7 @@ jobs:
     api-key: ${{ secrets.KUBIGO_API_KEY }}
     service: '123e4567-e89b-12d3-a456-426614174000'  # Can use GUID directly
     images: myrepo/myapp:${{ github.sha }}
+    target: production
 ```
 
 ### Multi-Environment Deployment
@@ -158,16 +164,29 @@ jobs:
     docker build -t myrepo/myapp:${{ github.sha }} .
     docker push myrepo/myapp:${{ github.sha }}
 
-- name: Create Releases
+- name: Deploy to Development
   uses: kubigo/release@v1
   with:
     api-key: ${{ secrets.KUBIGO_API_KEY }}
     service: api-service
     images: myrepo/myapp:${{ github.sha }}
-  # This will create releases for ALL configured targets:
-  # - Development (auto-deploys)
-  # - Staging (requires approval)
-  # - Production (requires approval)
+    target: development
+
+- name: Deploy to Staging
+  uses: kubigo/release@v1
+  with:
+    api-key: ${{ secrets.KUBIGO_API_KEY }}
+    service: api-service
+    images: myrepo/myapp:${{ github.sha }}
+    target: staging
+
+- name: Deploy to Production
+  uses: kubigo/release@v1
+  with:
+    api-key: ${{ secrets.KUBIGO_API_KEY }}
+    service: api-service
+    images: myrepo/myapp:${{ github.sha }}
+    target: production
 ```
 
 ### With Custom Metadata
@@ -179,6 +198,7 @@ jobs:
     api-key: ${{ secrets.KUBIGO_API_KEY }}
     service: api-service
     images: myrepo/myapp:${{ github.sha }}
+    target: development
     triggered-by: ${{ github.actor }}
 ```
 
@@ -309,7 +329,9 @@ Add this to your workflow for detailed logs:
   with:
     kubigo-url: ${{ secrets.KUBIGO_URL }}
     api-key: ${{ secrets.KUBIGO_API_KEY }}
+    service: api-service
     images: myrepo/myapp:${{ github.sha }}
+    target: development
   env:
     ACTIONS_STEP_DEBUG: true
 ```

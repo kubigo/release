@@ -16,8 +16,8 @@ inputs:
     description: 'Docker images to deploy (comma-separated or newline-separated for multiple containers)'
     required: true
   target:
-    description: 'Target environment to deploy to (e.g., development, staging, production). If not specified, deploys to all targets.'
-    required: false
+    description: 'Target environment to deploy to (e.g., development, staging, production)'
+    required: true
   kubigo-url:
     description: 'Kubigo API URL (optional, defaults to https://app.kubigo.cloud)'
     required: false

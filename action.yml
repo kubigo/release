@@ -23,6 +23,9 @@ inputs:
     description: 'Who/what triggered this release (optional, defaults to github-actions)'
     required: false
     default: 'github-actions'
+  changelog:
+    description: 'Changelog in markdown format (optional)'
+    required: false
   repository-url:
     description: 'Repository URL (optional, auto-detected, for audit/tracking only)'
     required: false

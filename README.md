@@ -63,9 +63,12 @@ jobs:
 | `images` | ✅ Yes | - | Docker images (comma or newline-separated) |
 | `kubigo-url` | ❌ No | `https://app.kubigo.cloud` | Kubigo API URL (self-hosted only) |
 | `triggered-by` | ❌ No | `github-actions` | Who/what triggered this release |
+| `changelog` | ❌ No | - | Changelog in markdown format |
 | `repository-url` | ❌ No | Auto-detected | Repository URL (audit/tracking) |
 | `branch` | ❌ No | Auto-detected | Git branch (audit/tracking) |
 | `commit-sha` | ❌ No | Auto-detected | Git commit SHA (audit/tracking) |
+
+**Note for API Support:** Passing a `changelog` requires the receiving API endpoint to accept the `changelog` field in its JSON payload and be able to process raw markdown strings.
 
 ### Target ID Format
 

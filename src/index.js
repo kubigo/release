@@ -12,6 +12,8 @@ async function run() {
     // Get optional inputs
     const kubigoUrl = core.getInput('kubigo-url') || 'https://app.kubigo.cloud';
     const triggeredBy = core.getInput('triggered-by') || 'github-actions';
+    const changelogInput = core.getInput('changelog');
+    const changelog = changelogInput ? changelogInput.replace(/\\n/g, '\n').replace(/\\r/g, '\r').replace(/\\t/g, '\t').replace(/\\"/g, '"').replace(/\\\\/g, '\\') : undefined;
 
     // Validate required fields
     if (!apiKey || apiKey.trim() === '') {
@@ -49,6 +51,7 @@ async function run() {
       repositoryUrl: repositoryUrl, // OPTIONAL: For audit/tracking
       branch: branch,             // OPTIONAL: For audit/tracking
       triggeredBy: triggeredBy,   // OPTIONAL: Who triggered
+      ...(changelog && { changelog: changelog }), // OPTIONAL: Changelog
       metadata: {
         buildNumber: github.context.runNumber.toString(),
         buildUrl: `${github.context.serverUrl}/${github.context.repo.owner}/${github.context.repo.repo}/actions/runs/${github.context.runId}`,

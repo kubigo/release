@@ -41707,6 +41707,7 @@ var __webpack_exports__ = {};
 const core = __nccwpck_require__(7484);
 const github = __nccwpck_require__(3228);
 const axios = __nccwpck_require__(7269);
+const fs = __nccwpck_require__(9896);
 
 async function run() {
   try {
@@ -41716,6 +41717,7 @@ async function run() {
     const imagesInput = core.getInput('images', { required: true });
 
     // Get optional inputs
+    const manifestsInput = core.getInput('manifests');
     const kubigoUrl = core.getInput('kubigo-url') || 'https://app.kubigo.cloud';
     const triggeredBy = core.getInput('triggered-by') || 'github-actions';
     const changelogInput = core.getInput('changelog');
@@ -41742,6 +41744,26 @@ async function run() {
       throw new Error('At least one image must be provided');
     }
 
+    // Parse manifests
+    const parsedManifests = [];
+    if (manifestsInput && manifestsInput.trim() !== '') {
+      const manifestPaths = manifestsInput
+        .split(/[\n,]/)
+        .map(p => p.trim())
+        .filter(p => p.length > 0);
+
+      for (const manifestPath of manifestPaths) {
+        if (!fs.existsSync(manifestPath)) {
+          throw new Error(`Manifest file not found: ${manifestPath}`);
+        }
+        const content = fs.readFileSync(manifestPath, 'utf8');
+        parsedManifests.push({
+          path: manifestPath,
+          content: content
+        });
+      }
+    }
+
     // Auto-detect git metadata from GitHub context or use provided values
     const repositoryUrl = core.getInput('repository-url') ||
       `${github.context.serverUrl}/${github.context.repo.owner}/${github.context.repo.repo}`;
@@ -41758,6 +41780,7 @@ async function run() {
       branch: branch,             // OPTIONAL: For audit/tracking
       triggeredBy: triggeredBy,   // OPTIONAL: Who triggered
       ...(changelog && { changelog: changelog }), // OPTIONAL: Changelog
+      ...(parsedManifests.length > 0 && { manifests: parsedManifests }), // OPTIONAL: Manifests
       metadata: {
         buildNumber: github.context.runNumber.toString(),
         buildUrl: `${github.context.serverUrl}/${github.context.repo.owner}/${github.context.repo.repo}/actions/runs/${github.context.runId}`,
@@ -41773,6 +41796,10 @@ async function run() {
     core.info(`🚀 Deploying to target: ${targetId}`);
     core.info(`📦 Images (${imageTags.length}):`);
     imageTags.forEach(tag => core.info(`   - ${tag}`));
+    if (parsedManifests.length > 0) {
+      core.info(`📄 Manifests (${parsedManifests.length}):`);
+      parsedManifests.forEach(m => core.info(`   - ${m.path}`));
+    }
     core.info(`📝 Commit: ${commitSha.substring(0, 7)}`);
     core.info(`🌐 Platform: GitHub Actions`);
     core.debug(`Full payload: ${JSON.stringify(payload, null, 2)}`);

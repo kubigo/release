@@ -15,6 +15,9 @@ inputs:
   images:
     description: 'Docker images to deploy (comma-separated or newline-separated for multiple containers)'
     required: true
+  manifests:
+    description: 'Manifests (yaml) to deploy (comma-separated or newline-separated file paths)'
+    required: false
   kubigo-url:
     description: 'Kubigo API URL (optional, defaults to https://app.kubigo.cloud)'
     required: false

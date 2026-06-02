@@ -61,6 +61,7 @@ jobs:
 | `api-key` | ✅ Yes | - | Kubigo API Key (store in GitHub Secrets) |
 | `target-id` | ✅ Yes | - | Target ID (UUID or database ID, e.g., `433453`) |
 | `images` | ✅ Yes | - | Docker images (comma or newline-separated) |
+| `manifests` | ❌ No | - | Manifests (yaml) to deploy (comma or newline-separated file paths) |
 | `kubigo-url` | ❌ No | `https://app.kubigo.cloud` | Kubigo API URL (self-hosted only) |
 | `triggered-by` | ❌ No | `github-actions` | Who/what triggered this release |
 | `changelog` | ❌ No | - | Changelog in markdown format |
@@ -121,6 +122,21 @@ Get your target ID from the Kubigo dashboard: Service → Target → Copy ID
       myrepo/frontend:${{ github.sha }}
       myrepo/backend:${{ github.sha }}
       myrepo/worker:${{ github.sha }}
+```
+
+### Deploy with Manifests
+
+```yaml
+- name: Deploy to AKS
+  uses: kubigo/release@v1
+  with:
+    api-key: ${{ secrets.KUBIGO_API_KEY }}
+    target-id: my-team/api-service/production
+    images: |
+      facommon.azurecr.io/feedo-frontend:${{ github.sha }}
+    manifests: |
+      Frontend/k8s/deployment.yaml
+      Frontend/k8s/service.yaml
 ```
 
 ### Deploy to Staging
